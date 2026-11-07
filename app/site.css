@@ -70,7 +70,6 @@
       right: 0;
       z-index: 999;
       background: rgba(255, 248, 240, 0.93);
-      backdrop-filter: blur(10px);
       border-bottom: 4px solid var(--bdr);
       padding: 10px 28px;
       display: flex;
@@ -583,14 +582,7 @@
     /* COMPOSER */
     .comp-sec {
       background: linear-gradient(160deg, #FFE8D6 0%, #FFD9B8 32%, #FFCBAE 58%, #FFE0C2 100%);
-      background-size: 400% 400%;
-      animation: mesh-bg 16s ease infinite;
       border-top: 4px solid var(--bdr)
-    }
-    @keyframes mesh-bg {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
     }
 
     .comp-grid {
@@ -2476,7 +2468,8 @@
 @media(min-width:1000px){.gift{margin-top:0!important}}
 @media(prefers-reduced-motion:reduce){.gift{animation:none!important}}
 /* ---- full polish pass ---- */
-#skyFx{position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,var(--s1,#FFD9C0),var(--s2,#CFE6F5))}
+#skyFx{position:fixed;inset:0;z-index:-1;pointer-events:none}
+#skyFx .skyFx-layer{position:absolute;inset:0;display:block;opacity:0;will-change:opacity}
 .sec,.how-sec,.comp-sec,.feat-sec,.kind-sec,.faq-sec{background:rgba(255,248,240,.76)!important}
 html[data-theme=night] .sec,html[data-theme=night] .how-sec,html[data-theme=night] .comp-sec,html[data-theme=night] .feat-sec,html[data-theme=night] .kind-sec,html[data-theme=night] .faq-sec{background:rgba(35,32,82,.78)!important}
 .hero-sub,.sec-p,.step-card p,.feat-card p,.kind-card p,.faq-a{color:#4A3228!important}

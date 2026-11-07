@@ -13,6 +13,12 @@ export default function ScrollEnhancements() {
     const cards = [...document.querySelectorAll(".step-card, .feat-card, .kind-card")];
     const scrollReveals = [...document.querySelectorAll(".sec-eye, .sec-h2, .sec-p, .cta-in, .px-div[data-div]")];
     const scenes = [...document.querySelectorAll(".how-sec, .feat-sec, .kind-sec, .faq-sec")];
+    const sceneSet = new Set(scenes);
+    const animatedAreas = [...document.querySelectorAll(".hero, .sec, .cta-sec, .footer, .px-div")];
+    const navLinks = [...document.querySelectorAll(".nav-links a, .mnav a")].filter(
+      (link) => link.hash && document.querySelector(link.hash),
+    );
+    const navSections = [...new Set(navLinks.map((link) => document.querySelector(link.hash)))];
     const visibleScenes = new Set();
     const tiltProperties = [
       "--depth-rotate-x",
@@ -29,6 +35,8 @@ export default function ScrollEnhancements() {
     let photoFrame = 0;
     let pointerTarget = null;
     let photoPointer = null;
+    let activeSection = null;
+    let navigationInitialized = false;
 
     function clearPhotoTilt() {
       photoPointer = null;
@@ -179,6 +187,25 @@ export default function ScrollEnhancements() {
       }
     }
 
+    function updateNavigation() {
+      const line = (nav?.offsetHeight ?? 0) + 40;
+      let current = null;
+      navSections.forEach((section) => {
+        if (section.getBoundingClientRect().top <= line) current = section.id;
+      });
+
+      if (navigationInitialized && current === activeSection) return;
+      navigationInitialized = true;
+      activeSection = current;
+      navLinks.forEach((link) => {
+        if (current && link.hash === `#${current}`) {
+          link.setAttribute("aria-current", "location");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    }
+
     function isInRevealViewport(element) {
       const bounds = element.getBoundingClientRect();
       return bounds.bottom > 0 && bounds.top < window.innerHeight - 32;
@@ -186,6 +213,8 @@ export default function ScrollEnhancements() {
 
     function updateScrollDepth() {
       scrollFrame = 0;
+      updateNavigation();
+
       if (nav) {
         const scrollable = document.documentElement.scrollHeight - window.innerHeight;
         const progress = scrollable > 0 ? Math.max(0, Math.min(1, window.scrollY / scrollable)) : 0;
@@ -243,11 +272,15 @@ export default function ScrollEnhancements() {
       sceneObserver?.disconnect();
       visibleScenes.clear();
       scenes.forEach(clearSceneDrift);
+      animatedAreas.forEach((area) => area.classList.remove("motion-paused"));
       if (motion.matches || !("IntersectionObserver" in window)) return;
 
       sceneObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach(({ target, isIntersecting }) => {
+            target.classList.toggle("motion-paused", !isIntersecting);
+            if (!sceneSet.has(target)) return;
+
             if (isIntersecting) visibleScenes.add(target);
             else {
               visibleScenes.delete(target);
@@ -259,7 +292,7 @@ export default function ScrollEnhancements() {
         { rootMargin: "160px 0px", threshold: 0 },
       );
 
-      scenes.forEach((scene) => sceneObserver.observe(scene));
+      animatedAreas.forEach((area) => sceneObserver.observe(area));
     }
 
     cards.forEach((card) => {
@@ -326,6 +359,7 @@ export default function ScrollEnhancements() {
       });
       scrollReveals.forEach(clearScrollReveal);
       scenes.forEach(clearSceneDrift);
+      animatedAreas.forEach((area) => area.classList.remove("motion-paused"));
       nav?.style.removeProperty("--page-progress");
     };
   }, []);

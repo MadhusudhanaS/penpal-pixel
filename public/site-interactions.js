@@ -554,25 +554,6 @@ function runWhenReady(callback) {
         composer.classList.toggle('quiet-writing', active);
       });
       updateDesk();
-
-      const links = [...document.querySelectorAll('.nav-links a, .mnav a')].filter(a => a.hash && document.querySelector(a.hash));
-      const sections = [...new Set(links.map(a => document.querySelector(a.hash)))];
-      let ticking = false;
-      function updateNavigation() {
-        ticking = false;
-        const line = document.querySelector('.nav').offsetHeight + 40;
-        let current = null;
-        sections.forEach(section => { if (section.getBoundingClientRect().top <= line) current = section.id; });
-        links.forEach(link => {
-          if (current && link.hash === '#' + current) link.setAttribute('aria-current', 'location');
-          else link.removeAttribute('aria-current');
-        });
-      }
-      addEventListener('scroll', () => {
-        if (!ticking) { ticking = true; requestAnimationFrame(updateNavigation); }
-      }, { passive: true });
-      addEventListener('resize', updateNavigation);
-      updateNavigation();
     }
 
     let pipLast = -1;
@@ -882,25 +863,6 @@ function runWhenReady(callback) {
         cots: [{ l: '6%', remap: { u: 'b', R: 'L', b: 'n' } }, { l: '25%', remap: { u: 'b', R: 'R', b: 'n' }, sm: true }, { l: '66%', remap: { u: 'b', R: 'M', b: 'n' }, sm: true }, { l: '82%', remap: { u: 'b', R: 'L', b: 'n' } }]
       });
       hydrateSprites();
-      // parallax: far layers lag the scroll a little; positions snap to whole pixels
-      if (!hv) return;
-      const layers = hv.querySelectorAll('.vl'), hero = document.getElementById('home');
-      const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-      let ticking = false, vis = true;
-      const clear = () => layers.forEach(l => l.style.removeProperty('transform'));
-      const upd = () => {
-        ticking = false;
-        if (prefersReducedMotion.matches) { clear(); return; }
-        if (!vis) return;
-        const y = Math.min(scrollY, 360);
-        layers.forEach(l => {
-          const lag = Number.parseFloat(l.dataset.lag);
-          if (Number.isFinite(lag)) l.style.transform = 'translate3d(0,' + Math.round(y * lag) + 'px,0)';
-        });
-      };
-      new IntersectionObserver(es => { vis = es[0].isIntersecting; if (vis) upd(); }, { threshold: 0 }).observe(hero);
-      addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
-      prefersReducedMotion.addEventListener('change', upd);
     }
     function setupAmbient() {
       const hs = document.querySelector('.hero-scene');
@@ -943,13 +905,32 @@ function runWhenReady(callback) {
 
 
 (function(){
-  const sky=document.createElement('div');sky.id='skyFx';sky.setAttribute('aria-hidden','true');document.body.prepend(sky);
-  const st=[['#FFD9C0','#CFE6F5'],['#FFE9B8','#FFD2A0'],['#F7A8A8','#B9A6D9'],['#3B2A4A','#5A3F7A']];
-  const hx=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
-  const mix=(a,b,t)=>{const x=hx(a),y=hx(b);return 'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*t)).join(',')+')'};
-  let tk=false;const upd=()=>{tk=false;const m=document.documentElement.scrollHeight-innerHeight;const p=Math.max(0,Math.min(1,scrollY/(m||1)))*3;const i=Math.min(2,Math.floor(p)),t=p-i;
-    sky.style.setProperty('--s1',mix(st[i][0],st[i+1][0],t));sky.style.setProperty('--s2',mix(st[i][1],st[i+1][1],t));};
-  addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(upd)}},{passive:true});upd();
+  const palettes=[['#FFD9C0','#CFE6F5'],['#FFE9B8','#FFD2A0'],['#F7A8A8','#B9A6D9'],['#3B2A4A','#5A3F7A']];
+  const sky=document.createElement('div');sky.id='skyFx';sky.setAttribute('aria-hidden','true');
+  const layers=[document.createElement('i'),document.createElement('i')];
+  layers.forEach(layer=>{layer.className='skyFx-layer';sky.appendChild(layer);});
+  document.body.prepend(sky);
+  let activeSegment=-1, lastOpacity=[null,null], pending=false;
+  const setOpacity=(index,opacity)=>{
+    const value=opacity.toFixed(4);
+    if(lastOpacity[index]===value)return;
+    layers[index].style.opacity=value;lastOpacity[index]=value;
+  };
+  const update=()=>{
+    pending=false;
+    const maxScroll=Math.max(1,document.documentElement.scrollHeight-innerHeight);
+    const progress=Math.max(0,Math.min(1,scrollY/maxScroll))*3;
+    const segment=Math.min(2,Math.floor(progress)),blend=progress-segment;
+    const base=segment%2,next=1-base;
+    if(segment!==activeSegment){
+      layers[base].style.backgroundImage='linear-gradient(180deg,'+palettes[segment][0]+','+palettes[segment][1]+')';
+      layers[next].style.backgroundImage='linear-gradient(180deg,'+palettes[segment+1][0]+','+palettes[segment+1][1]+')';
+      activeSegment=segment;
+    }
+    setOpacity(base,1);setOpacity(next,blend);
+  };
+  addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(update)}},{passive:true});
+  update();
 })();
 
 
