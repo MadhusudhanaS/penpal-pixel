@@ -30,6 +30,9 @@ as the repository's deployment source. The build derives the correct
 repository subpath automatically, so project Pages URLs and user-site URLs
 both work. The workflow runs `npm audit` before publishing and uses narrowly
 scoped GitHub permissions; no personal access token or app secret is needed.
+The static export includes a sitemap for the public home page. After deploying,
+submit its `sitemap.xml` URL in Google Search Console; Google controls when and
+whether a site appears in search results.
 
 Drafts and theme preferences are stored by the browser for each origin. A draft
 is stored locally in the browser. Letters are downloaded as files for you to

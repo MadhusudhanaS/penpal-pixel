@@ -1,9 +1,29 @@
 import "./globals.css";
 import { basePath } from "./base-path";
+import { siteUrl } from "./site-url";
+
+const title = "Penpal Pixel: slow, kind letters";
+const description = "A cozy pixel-art letter writing and photo scrapbook experience.";
 
 export const metadata = {
-  title: "Penpal Pixel: slow, kind letters",
-  description: "A cozy pixel-art letter writing and photo scrapbook experience.",
+  metadataBase: siteUrl,
+  title,
+  description,
+  alternates: {
+    canonical: siteUrl.href,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title,
+    description,
+    url: siteUrl.href,
+    siteName: "Penpal Pixel",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export const viewport = { themeColor: "#FFF8F0" };
