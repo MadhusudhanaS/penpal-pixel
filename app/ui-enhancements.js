@@ -49,6 +49,8 @@ export default function UIEnhancements() {
     let cursor = null;
     let lastTrailAt = 0;
     let mascotFloat = null;
+    let mascotObserver = null;
+    let mascotVisible = true;
     let whisper;
 
     scrollAreas.forEach((area) => area.setAttribute("data-lenis-prevent", ""));
@@ -214,6 +216,7 @@ export default function UIEnhancements() {
           ease: "sine.inOut",
           snap: { y: 1 },
         });
+        if (!mascotVisible) mascotFloat.pause();
       } else if (mascot) {
         gsap.set(mascot, { clearProps: "transform" });
       }
@@ -234,7 +237,9 @@ export default function UIEnhancements() {
         duration: 0.3,
         ease: "power2.out",
         overwrite: "auto",
-        onComplete: () => mascotFloat?.resume(),
+        onComplete: () => {
+          if (mascotVisible) mascotFloat?.resume();
+        },
       });
     };
 
@@ -246,6 +251,14 @@ export default function UIEnhancements() {
       mascot.addEventListener("pointerenter", onMascotEnter);
       mascot.addEventListener("pointerleave", onMascotLeave);
       syncMascotMotion();
+      if ("IntersectionObserver" in window) {
+        mascotObserver = new IntersectionObserver(([entry]) => {
+          mascotVisible = entry.isIntersecting;
+          if (mascotVisible) mascotFloat?.resume();
+          else mascotFloat?.pause();
+        }, { rootMargin: "160px 0px" });
+        mascotObserver.observe(mascot);
+      }
     }
 
     syncLenis();
@@ -270,6 +283,7 @@ export default function UIEnhancements() {
       window.removeEventListener("pointerleave", handlePointerLeave);
       mascot?.removeEventListener("pointerenter", onMascotEnter);
       mascot?.removeEventListener("pointerleave", onMascotLeave);
+      mascotObserver?.disconnect();
       mascotFloat?.kill();
       if (mascot) gsap.set(mascot, { clearProps: "transform" });
       whisper?.remove();
